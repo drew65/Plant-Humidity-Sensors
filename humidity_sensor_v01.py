@@ -173,14 +173,17 @@ class Sensor():
             raise Exception('Failed to load config file.')
         print("Sensor config loaded")
         self.confMessage = {}
-        self.nbrOfItems = int(self.config["nbrItems"])
+        self.json_confMessage = {}
+        self.nbrOfItems = int(self.config["devices"][0]["nbrItems"])
         print("nbr of items : {}".format(self.nbrOfItems))
-        self.buildConfigMessage(self.config)
+        for i in range(self.config["nbrDevices"]):
+            self.confMessage[self.config["devices"][i]["ipAddress"]], self.json_confMessage[self.config["devices"][i]["ipAddress"]] = self.buildConfigMessage(self.config["devices"][i])
         self.data = {}
         self.plots = {}
         test2 = {}
-        for i in range(self.nbrOfItems):
-            test2[self.config["items"][i]["name"]] = self.config["items"][i]["plots"]
+        for j in range(self.config["nbrDevices"]):
+            for i in range(self.config["devices"][j]["nbrItems"]):
+                test2[self.config["devices"][j]["items"][i]["name"]] = self.config["devices"][j]["items"][i]["plots"]
         print("test22 : {}".format(test2))
         for plantName  in list(test2.keys()):
             self.data[plantName] = DataCollect(plantName, test2[plantName])
@@ -191,11 +194,14 @@ class Sensor():
         plt.show()
 
     def buildConfigMessage(self, json_plot):
-        self.confMessage["message"] = "transmit"
-        self.confMessage["type"] = "config"
-        self.confMessage["nbrItems"] = json_plot["nbrItems"]
+        message = {}
+        message["message"] = "transmit"
+        message["type"] = "config"
+        message["ipAddress"] = json_plot["ipAddress"]
+        message["port"] = json_plot["port"]
+        message["nbrItems"] = json_plot["nbrItems"]
         items = []
-        for i in range(self.confMessage["nbrItems"]):
+        for i in range(message["nbrItems"]):
             item = {}
             item["type"] = json_plot["items"][i]["type"]
             item["subType"] = json_plot["items"][i]["subType"]
@@ -204,14 +210,15 @@ class Sensor():
             item["data"] = json_plot["items"][i]["data"]
             item["mode"] = json_plot["items"][i]["mode"]
             items.append(item)
-        self.confMessage["items"] = items
-        print("self.confMessage : {}".format(self.confMessage))
-        self.json_confMessage = json.dumps(self.confMessage)
+        message["items"] = items
+        print("self.confMessage : {}".format(message))
+        json_message = json.dumps(message)
+        return message, json_message
 
     def animate2(self, i):
         print(datetime.now().strftime('%H:%M:%S.%f'))
-        download, _ = sock.recvfrom(2056) # buffer size is 1024 bytes
-        #print("test1.0")
+        download, ipaddr = sock.recvfrom(2056) # buffer size is 1024 bytes
+        print("remot ip {} : {}  {}".format(ipaddr, ipaddr[0], ipaddr[1]))
         text = download.decode('utf-8')
         try:
             json_obj = json.loads(text)
@@ -221,7 +228,8 @@ class Sensor():
         else:
             if json_obj["message"] == "request":
                 if json_obj["type"] == "config":
-                    sock.sendto(self.json_confMessage.encode(), (UDP_REMOTE_IP, UDP_PORT))
+                    if ipaddr[0] in self.confMessage.keys():
+                        sock.sendto(self.json_confMessage[ipaddr[0]].encode(), (ipaddr[0], ipaddr[1]))
                     time.sleep(5)
                     print("send config")
             elif json_obj["message"] == "transmit" and json_obj["type"] == "data":
