@@ -1,0 +1,35 @@
+{
+    "message" : "plot", 
+    "type" : "config",
+    "nbrItems":2,
+    "items" : [
+        {
+            "type" : "sensor",
+            "subType" : "soilHumidity",
+            "name" : "plant1",
+            "power" : "12",
+            "data" : "A0",
+            "mode" : "A",
+            "nbrPlots" : 3,
+            "plots" : [
+                [1, "minutes", "%H:%M", "% soil humidity", 20],
+                [2, "minutes", "%H:%M", "% soil humidity", 20],
+                [4, "minutes", "%H:%M", "% soil humidity", 20]
+            ]
+        },
+        {
+            "type" : "sensor",
+            "subType" : "soilHumidity",
+            "name" : "plant2",
+             "power" : "12",
+            "data" : "A2",
+            "mode" : "A",
+            "nbrPlots" : 3,
+            "plots" : [
+                [3, "minutes", "%H:%M", "% soil humidity", 20],
+                [5, "minutes", "%H:%M", "% soil humidity", 20],
+                [7, "minutes", "%H:%M", "% soil humidity", 20]
+            ]
+        }
+    ]
+}
